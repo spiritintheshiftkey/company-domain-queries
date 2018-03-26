@@ -1,0 +1,52 @@
+USE `DB_company_domains_sample`;
+
+-- active, primary, supercharged domains belonging to company inc
+SELECT `associations`.name, 
+`companies`.name, 
+`domain` 
+FROM `domains` LEFT JOIN `sites`
+ON `domains`.`site` = `sites`.`id`
+LEFT JOIN `associations`
+ON `sites`.`association` = `associations`.`id`
+LEFT JOIN `companies`
+ON `sites`.`company` = `companies`.`id`
+WHERE `associations`.name = 'Company, Inc.' 
+AND `companies`.`is_deleted` = 0
+AND `companies`.`is_on_hold` = 0
+AND `sites`.`is_deleted` = 0
+AND `sites`.`is_supercharged` = 1
+AND `domains`.`is_primary` = 1 
+AND `domains`.`is_deleted` = 0;
+
+-- active sites with no domain
+SELECT `associations`.name, 
+`companies`.name, 
+`sites`.name 
+FROM `sites` LEFT JOIN `domains`
+ON `sites`.`id` = `domains`.`site`
+LEFT JOIN `associations`
+ON `sites`.`association` = `associations`.`id`
+LEFT JOIN `companies`
+ON `sites`.`company` = `companies`.`id`
+WHERE  `domains`.`site` IS NULL
+AND `companies`.`is_deleted` = 0
+AND `companies`.`is_on_hold` = 0
+AND `sites`.`is_deleted` = 0;
+
+
+-- active sites with at least one domain and all domains deleted
+SELECT DISTINCT `sites`.`id`, 
+`sites`.name 
+FROM `sites` LEFT JOIN `domains`
+ON `sites`.`id` = `domains`.`site`
+LEFT JOIN `companies`
+ON `sites`.`company` = `companies`.`id`
+WHERE  `domains`.`site` IS NOT NULL
+AND `companies`.`is_deleted` = 0
+AND `companies`.`is_on_hold` = 0
+AND `sites`.`is_deleted` = 0
+AND `sites`.`id` NOT IN
+(SELECT `site` FROM `domains` 
+WHERE `domains`.`is_deleted` = 0
+);
+
